@@ -13,6 +13,8 @@ The organizations can be sorted by asrank or cone size based on a cli flag. Incl
 
 There will be multiple ASNs for each provider. So use the highest rank ASN for each.
 
+## Setup
+`pip install -r requirements.txt`
 
 ## Usage
 `python asrank.py [filename_of_orgs_list] [--order [rank][cone]]`
