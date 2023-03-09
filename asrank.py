@@ -1,5 +1,6 @@
 import requests
 import argparse
+import cowsay
 
 
 def create_organizations_list(args):
@@ -7,9 +8,10 @@ def create_organizations_list(args):
     orgs_file = open(orgs_input, "r")
 
     organizations = [org.strip().replace(' ', '') for org in orgs_file.readlines()]
-    print("=================================================================================")
+    print('==================================================================================================================')
     print(f"Organization Count: {len(organizations)}")
-    print("=================================================================================")
+    print(f"Sort Order: {args.order}")
+    print('==================================================================================================================')
     return organizations
 
 
@@ -87,7 +89,7 @@ def present_organizations_details(details):
         print(f"Organization Name: {org_detail['org_name']}")
         print(f"Organization Rank: {org_detail['org_rank']}")
         print(f"Cone Size: {org_detail['cone_size']}")
-        print("=================================================================================")
+        print('==================================================================================================================')
 
 
 def organizations_details(organizations, args):
@@ -115,6 +117,11 @@ def organizations_details(organizations, args):
         return 'No organizations to display'
 
 
+
+print('==================================================================================================================')
+cowsay.trex('Welcome to AZRank! Please scratch my nose')
+
+print('==================================================================================================================')
 ######################################### ARG PARSE SECTION ###################################
 parser = argparse.ArgumentParser(
     prog='ASRank',
