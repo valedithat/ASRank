@@ -9,8 +9,8 @@ class ASRank:
 
         self.orgs = []
         self.term_output = """
-    Rank\t\t Cone Size\t\t Organization Name
-    -----\t\t ----------\t\t -------------------"""
+Rank\t\t Cone Size\t\t Organization Name
+-----\t\t ----------\t\t -------------------"""
 
     def ingest_org_list(self):
         orgs_file = open(self.file, 'r')
