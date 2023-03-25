@@ -8,10 +8,8 @@ def create_organizations_list(args):
     orgs_file = open(orgs_input, "r")
 
     organizations = [org.strip().replace(' ', '') for org in orgs_file.readlines()]
-    print('==================================================================================================================')
-    print(f"Organization Count: {len(organizations)}")
+    print(f"Total Organizations: {len(organizations)}")
     print(f"Sort Order: {args.order}")
-    print('==================================================================================================================')
     return organizations
 
 
@@ -85,12 +83,20 @@ def derp_sort(organization_details, args):
             break
 
 def present_organizations_details(details):
-    for org_detail in details:
-        print(f"Organization Name: {org_detail['org_name']}")
-        print(f"Organization Rank: {org_detail['org_rank']}")
-        print(f"Cone Size: {org_detail['cone_size']}")
-        print('==================================================================================================================')
+    org_detail_string = """
+Rank\t\t Cone Size\t\t Organization Name
+-----\t\t ----------\t\t -------------------"""
 
+    for org_detail in details:
+        #         org_detail_string = f"""
+        # {org_detail['org_name']}:
+        #     Organization Rank: {org_detail['org_rank']}
+        #     Cone Size: {org_detail['cone_size']}"""
+
+        org_detail_string += f"""
+{org_detail['org_rank']}\t\t {org_detail['cone_size']}\t\t\t {org_detail['org_name']}"""
+
+    print(org_detail_string)
 
 def organizations_details(organizations, args):
     details = []
@@ -118,11 +124,6 @@ def organizations_details(organizations, args):
 
 
 
-print('==================================================================================================================')
-cowsay.trex('Welcome to AZRank! Please scratch my nose')
-
-print('==================================================================================================================')
-######################################### ARG PARSE SECTION ###################################
 parser = argparse.ArgumentParser(
     prog='ASRank',
     description='it ranks stuff and things',
@@ -139,11 +140,6 @@ parser.add_argument('--order', choices=['rank', 'cone'], default='rank', help='s
 )
 
 args = parser.parse_args()
-
-######################################### ARG PARSE SECTION ###################################
-
-
 organizations = create_organizations_list(args)
-
 organizations_details(organizations, args)
 
