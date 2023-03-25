@@ -2,133 +2,91 @@ import requests
 import argparse
 
 
-# def create_organizations_list(args):
-#     orgs_input = args.filename
-#     orgs_file = open(orgs_input, "r")
+def ingest_org_list(args):
+    orgs_file = open(args.file, "r")
+    organizations = [org.strip().replace(' ', '') for org in orgs_file.readlines()]
+    print(f"Total Organizations: {len(organizations)}")
+    print(f"Sort Order: {args.order}")
+    return organizations
 
-#     organizations = [org.strip().replace(' ', '') for org in orgs_file.readlines()]
-#     print(f"Total Organizations: {len(organizations)}")
-#     print(f"Sort Order: {args.order}")
-#     return organizations
+def fetch_highest_ranking_asn(org):
+    try:
+        req = requests.get(f"https://api.asrank.caida.org/v2/restful/asns/name/{org}")
+        asns = req.json()
 
+        if asns['data']['asns']['edges']:
+            highest_rank = 0
+            org_id = ''
 
-# def fetch_highest_ranking_asn(organization):
-#     asns_url = f"https://api.asrank.caida.org/v2/restful/asns/name/{organization}"
-#     try:
-#         asns_response = requests.get(asns_url)
-#         json_asns_response = asns_response.json()
+            for asn in asns['data']['asns']['edges']:
+                if asn['node']['rank'] > highest_rank:
+                    highest_rank = asn['node']['rank']
+                    org_id = asn['node']['organization']['orgId']
+            return org_id
+        else:
+            raise ValueError(f"No ASName found for {org}")
+    except ValueError as e:
+        print(e)
 
-#         if json_asns_response['data']['asns']['edges']:
-#             highest_ranking_asn = {'rank': 0, 'asn': '', 'org_id': ''}
-#             # determine highest asn rank
-#             for asn in json_asns_response['data']['asns']['edges']:
-#                 asn_node = asn['node']
-#                 rank = asn_node['rank']
-#                 org_id = org_id = asn_node['organization']['orgId']
+def fetch_organization(org_id):
+    req = requests.get(f"https://api.asrank.caida.org/v2/restful/organizations/{org_id}")
+    orgs = req.json()
 
-#                 if rank > highest_ranking_asn['rank']:
-#                     highest_ranking_asn['rank'] = rank
-#                     highest_ranking_asn['asn'] = asn_node['asn']
-#                     highest_ranking_asn['org_id'] = org_id
-#             return highest_ranking_asn
-#         else:
-#             raise ValueError(f"No ASName found for {organization}")
-#     except requests.exceptions.RequestException as e:
-#         print(f"Failed to fetch ASNs for {organization}: {e}")
-#     except ValueError as e:
-#         print(e)
+    if orgs['data']['organization']:
+        org = orgs['data']['organization']
+        org_details = {
+            'name': org['orgName'],
+            'rank': org['rank'],
+            'cone': org['cone']['numberAsns'],
+        }
+        return org_details
 
+def sort_orgs(orgs, order):
+    for i in range(len(orgs)):
+        swapped = False
 
-# def fetch_organization(highest_ranking_asn):
-#     org_id = highest_ranking_asn['org_id']
-#     orgs_url = f"https://api.asrank.caida.org/v2/restful/organizations/{org_id}"
-#     try:
-#         orgs_response = requests.get(orgs_url)
-#         json_orgs_response = orgs_response.json()
+        for j in range(0, len(orgs) - i - 1):
+            order = 'rank' if order == 'rank' else 'cone'
 
-#         if json_orgs_response['data']['organization']:
-#             org = json_orgs_response['data']['organization']
-#             org_details = {
-#                 'org_name': org['orgName'],
-#                 'org_rank': org['rank'],
-#                 'cone_size': org['cone']['numberAsns'],
-#             }
-#             return org_details
-#         else:
-#             raise ValueError(f"No organization found for {org_id}")
-#     except requests.exceptions.RequestException as e:
-#         print(f"Failed to fetch organization details for {org_id}: {e}")
-#     except ValueError as e:
-#         print(e)
+            if orgs[j][order] < orgs[j+1][order]:
+                orgs[j], orgs[j+1] = orgs[j+1], orgs[j]
+                swapped = True
 
+        if(swapped == False):
+            break
 
-# def bubble_sort(organization_details, args):
-#     length = len(organization_details)
-#     for i in range(length):
-#         swapped = False
+def present_orgs(orgs):
+    result = """
+Rank\t\t Cone Size\t\t Organization Name
+-----\t\t ----------\t\t -------------------"""
 
-#         for j in range(0, length - i - 1):
-#             # order by org_rank or cone_size
-#             if args.order == 'rank':
-#                 order = 'org_rank'
-#             elif args.order == 'cone':
-#                 order = 'cone_size'
-#             # sort organization_details in descrending
-#             if organization_details[j][order] < organization_details[j+1][order]:
-#                 organization_details[j], organization_details[j+1] = organization_details[j+1], organization_details[j]
-#                 swapped = True
+    for org in orgs:
+        result += f"""
+{org['rank']}\t\t {org['cone']}\t\t\t {org['name']}"""
 
-#         if(swapped == False):
-#             break
+    print(result)
 
-# def present_organizations_details(details):
-#     org_detail_string = """
-# Rank\t\t Cone Size\t\t Organization Name
-# -----\t\t ----------\t\t -------------------"""
+def query_orgs(orgs_list, args):
+    orgs = []
+    for org in orgs_list:
+        try:
+            org_id = fetch_highest_ranking_asn(org)
 
-#     for org_detail in details:
-#         org_detail_string += f"""
-# {org_detail['org_rank']}\t\t {org_detail['cone_size']}\t\t\t {org_detail['org_name']}"""
+            if org_id:
+                org_details = fetch_organization(org_id)
+                orgs.append(org_details)
+        except ValueError as e:
+            print(e)
 
-#     print(org_detail_string)
-
-# def organizations_details(organizations, args):
-#     details = []
-#     for organization in organizations:
-#         try:
-#             # get asns by org name
-#             highest_ranking_asn = fetch_highest_ranking_asn(organization)
-#         except requests.exceptions.RequestException as e:
-#             print(f"Failed to fetch details for {organization}: {e}")
-#         except ValueError as e:
-#             print(e)
-#         else:
-#             if highest_ranking_asn:
-#                 # get org details by orgId
-#                 org_details = fetch_organization(highest_ranking_asn)
-#                 details.append(org_details)
+    if orgs:
+        sort_orgs(orgs, args)
+        present_orgs(orgs)
 
 
-#     if details:
-#         # sort details by 'rank' or 'cone' size depending on arg provided in 'order'
-#         bubble_sort(details, args)
-#         present_organizations_details(details)
-#     else:
-#         return 'No organizations to display'
-
-
-
-# Arg Parse
 parser = argparse.ArgumentParser(prog='ASRank')
-parser.add_argument('filename', help='filename input of all organizations to search'
-)
-parser.add_argument('--order', choices=['rank', 'cone'], default='rank', help='sort by rank or cone size', required=False,
-)
+parser.add_argument('file', help='org list')
+parser.add_argument('--order', choices=['rank', 'cone'], help='rank or cone size')
+
 args = parser.parse_args()
-
-
-
-
-organizations = create_organizations_list(args)
-organizations_details(organizations, args)
-
+orgs = ingest_org_list(args)
+query_orgs(orgs, args)
