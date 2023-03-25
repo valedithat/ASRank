@@ -20,9 +20,9 @@ This is a script to query [ASRank API](https://asrank.caida.org/) with organizat
     * Hetzner
     * LeaseWeb
 
-2. `python asrank.py  [--order [rank][cone]] filename`
+2. `python asrank.py  --order [rank, cone] filename`
 
-    Order is an optional argument that will sort the organizations based on either rank or cone size in *desending* order. Order defaults to `rank` if left blank.
+    Order will sort the organizations based on either rank or cone size in *desending* order.
 
 ## Examples
 * `python asrank.py organizations.txt --order cone`
