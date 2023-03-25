@@ -1,6 +1,5 @@
 import requests
 import argparse
-import cowsay
 
 
 def create_organizations_list(args):
@@ -63,7 +62,7 @@ def fetch_organization(highest_ranking_asn):
         print(e)
 
 
-def derp_sort(organization_details, args):
+def bubble_sort(organization_details, args):
     length = len(organization_details)
     for i in range(length):
         swapped = False
@@ -88,11 +87,6 @@ Rank\t\t Cone Size\t\t Organization Name
 -----\t\t ----------\t\t -------------------"""
 
     for org_detail in details:
-        #         org_detail_string = f"""
-        # {org_detail['org_name']}:
-        #     Organization Rank: {org_detail['org_rank']}
-        #     Cone Size: {org_detail['cone_size']}"""
-
         org_detail_string += f"""
 {org_detail['org_rank']}\t\t {org_detail['cone_size']}\t\t\t {org_detail['org_name']}"""
 
@@ -117,7 +111,7 @@ def organizations_details(organizations, args):
 
     if details:
         # sort details by 'rank' or 'cone' size depending on arg provided in 'order'
-        derp_sort(details, args)
+        bubble_sort(details, args)
         present_organizations_details(details)
     else:
         return 'No organizations to display'
